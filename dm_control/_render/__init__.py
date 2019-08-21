@@ -28,8 +28,8 @@ import os
 from absl import logging
 from dm_control._render import constants
 
-BACKEND = os.environ.get(constants.EGL)
-#BACKEND = os.environ.get(constants.MUJOCO_GL)
+#BACKEND = os.environ.get(constants.EGL)
+BACKEND = os.environ.get(constants.MUJOCO_GL)
 
 
 # pylint: disable=g-import-not-at-top
