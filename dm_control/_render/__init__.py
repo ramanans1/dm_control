@@ -30,7 +30,7 @@ from dm_control._render import constants
 
 #BACKEND = os.environ.get(constants.EGL)
 #BACKEND = os.environ.get(constants.MUJOCO_GL)
-BACKEND = 'omesa'
+BACKEND = 'osmesa'
 
 
 # pylint: disable=g-import-not-at-top
