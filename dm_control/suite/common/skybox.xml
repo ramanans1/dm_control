@@ -1,6 +1,6 @@
 <mujoco>
   <asset>
-      <texture name="skybox" type="skybox" file="all_domains.png" rgb1=".4 .6 .8" rgb2="0 0 0"
+      <texture name="skybox" type="skybox" file="all_domains4.png" rgb1=".4 .6 .8" rgb2="0 0 0"
                width="800" height="800" mark="random" markrgb="1 1 1"/>
   </asset>
 </mujoco>
