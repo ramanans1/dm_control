@@ -6,6 +6,8 @@ for example receiving a positive reward.
 <mujoco>
   <asset>
     <texture name="grid" type="2d" builtin="checker" rgb1=".1 .2 .3" rgb2=".2 .3 .4" width="300" height="300" mark="edge" markrgb=".2 .3 .4"/>
+    <texture name="wall" type="2d" file="/usr/local/lib/python3.6/dist-packages/dm_control/suite/common/fullview2.png" rgb1=".1 .2 .3" rgb2=".2 .3 .4" width="1800" height="1800" mark="edge" markrgb=".2 .3 .4"/>
+    <material name="wall" texture="wall" reflectance=".2" texrepeat="1 1"/>
     <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".2"/>
     <material name="self" rgba=".7 .5 .3 1"/>
     <material name="self_default" rgba=".7 .5 .3 1"/>
