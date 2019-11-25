@@ -19,5 +19,7 @@ for example receiving a positive reward.
     <material name="target_default" rgba=".6 .3 .3 1"/>
     <material name="target_highlight" rgba=".6 .3 .3 .4"/>
     <material name="site" rgba=".5 .5 .5 .3"/>
+    <texture name="wall" type="2d" file="/usr/local/lib/python3.6/dist-packages/dm_control/suite/common/fullview2.png" rgb1=".1 .2 .3" rgb2=".2 .3 .4" width="1800" height="1800" mark="edge" markrgb=".2 .3 .4"/>
+    <material name="wall" texture="wall" reflectance=".2" texrepeat="1 1"/>
   </asset>
 </mujoco>
