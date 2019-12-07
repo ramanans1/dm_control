@@ -34,6 +34,7 @@ _DEFAULT_TIME_LIMIT = 10
 
 # Running speed above which reward is 1.
 _RUN_SPEED = 10
+_SPIN_SPEED = 5
 
 SUITE = containers.TaggedTasks()
 
@@ -61,6 +62,24 @@ def run_back(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=Non
   return control.Environment(physics, task, time_limit=time_limit,
                              **environment_kwargs)
 
+@SUITE.add('benchmarking')
+def flip_forward(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
+  """Returns the run task."""
+  physics = Physics.from_xml_string(*get_model_and_assets())
+  task = Cheetah(forward=False,flip=True,random=random)
+  environment_kwargs = environment_kwargs or {}
+  return control.Environment(physics, task, time_limit=time_limit,
+                             **environment_kwargs)
+
+@SUITE.add('benchmarking')
+def flip_backward(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
+  """Returns the run task."""
+  physics = Physics.from_xml_string(*get_model_and_assets())
+  task = Cheetah(forward=True,flip=True,random=random)
+  environment_kwargs = environment_kwargs or {}
+  return control.Environment(physics, task, time_limit=time_limit,
+                             **environment_kwargs)
+
 
 class Physics(mujoco.Physics):
   """Physics simulation with additional features for the Cheetah domain."""
@@ -69,13 +88,19 @@ class Physics(mujoco.Physics):
     """Returns the horizontal speed of the Cheetah."""
     return self.named.data.sensordata['torso_subtreelinvel'][0]
 
+  def angmomentum(self):
+    """Returns the angular momentum of torso of the Cheetah about Y axis."""
+    return self.named.data.subtree_angmom['torso'][1]
+
+
 
 class Cheetah(base.Task):
   """A `Task` to train a running Cheetah."""
 
-  def __init__(self, forward=True, random=None):
+  def __init__(self, forward=True, flip=False, random=None):
 
     self._forward = 1 if forward else -1
+    self._flip = flip
     super(Cheetah, self).__init__(random=random)
 
 
@@ -105,8 +130,18 @@ class Cheetah(base.Task):
 
   def get_reward(self, physics):
     """Returns a reward to the agent."""
-    return rewards.tolerance(self._forward*physics.speed(),
-                             bounds=(_RUN_SPEED, float('inf')),
-                             margin=_RUN_SPEED,
-                             value_at_margin=0,
-                             sigmoid='linear')
+    if self._flip:
+        reward = rewards.tolerance(self._forward*physics.angmomentum(),
+                                 bounds=(_SPIN_SPEED, float('inf')),
+                                 margin=_SPIN_SPEED,
+                                 value_at_margin=0,
+                                 sigmoid='linear')
+
+    else:
+        reward = rewards.tolerance(self._forward*physics.speed(),
+                                 bounds=(_RUN_SPEED, float('inf')),
+                                 margin=_RUN_SPEED,
+                                 value_at_margin=0,
+                                 sigmoid='linear')
+
+    return reward
