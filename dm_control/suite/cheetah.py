@@ -47,7 +47,16 @@ def get_model_and_assets():
 def run(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
   """Returns the run task."""
   physics = Physics.from_xml_string(*get_model_and_assets())
-  task = Cheetah(random=random)
+  task = Cheetah(forward=True,random=random)
+  environment_kwargs = environment_kwargs or {}
+  return control.Environment(physics, task, time_limit=time_limit,
+                             **environment_kwargs)
+
+@SUITE.add('benchmarking')
+def run_back(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
+  """Returns the run task."""
+  physics = Physics.from_xml_string(*get_model_and_assets())
+  task = Cheetah(forward=False,random=random)
   environment_kwargs = environment_kwargs or {}
   return control.Environment(physics, task, time_limit=time_limit,
                              **environment_kwargs)
@@ -63,6 +72,12 @@ class Physics(mujoco.Physics):
 
 class Cheetah(base.Task):
   """A `Task` to train a running Cheetah."""
+
+  def __init__(self, forward=True, random=None):
+
+    self._forward = 1 if forward else -1
+    super(Cheetah, self).__init__(random=random)
+
 
   def initialize_episode(self, physics):
     """Sets the state of the environment at the start of each episode."""
@@ -90,7 +105,7 @@ class Cheetah(base.Task):
 
   def get_reward(self, physics):
     """Returns a reward to the agent."""
-    return rewards.tolerance(physics.speed(),
+    return rewards.tolerance(self._forward*physics.speed(),
                              bounds=(_RUN_SPEED, float('inf')),
                              margin=_RUN_SPEED,
                              value_at_margin=0,
