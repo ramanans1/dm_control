@@ -35,6 +35,7 @@ _CONTROL_TIMESTEP = .025
 
 # Minimal height of torso over foot above which stand reward is 1.
 _STAND_HEIGHT = 1.2
+_JUMP_HEIGHT = 2.0
 
 # Horizontal speeds (meters/second) above which move reward is 1.
 _WALK_SPEED = 1
@@ -54,6 +55,16 @@ def stand(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
   """Returns the Stand task."""
   physics = Physics.from_xml_string(*get_model_and_assets())
   task = PlanarWalker(move_speed=0, random=random)
+  environment_kwargs = environment_kwargs or {}
+  return control.Environment(
+      physics, task, time_limit=time_limit, control_timestep=_CONTROL_TIMESTEP,
+      **environment_kwargs)
+
+@SUITE.add('benchmarking')
+def jump(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
+  """Returns the Stand task."""
+  physics = Physics.from_xml_string(*get_model_and_assets())
+  task = PlanarWalker(move_speed=0, random=random, jump=True)
   environment_kwargs = environment_kwargs or {}
   return control.Environment(
       physics, task, time_limit=time_limit, control_timestep=_CONTROL_TIMESTEP,
@@ -116,7 +127,7 @@ class Physics(mujoco.Physics):
 class PlanarWalker(base.Task):
   """A planar walker task."""
 
-  def __init__(self, move_speed, random=None, forward=True):
+  def __init__(self, move_speed, random=None, forward=True, jump=False):
     """Initializes an instance of `PlanarWalker`.
 
     Args:
@@ -129,6 +140,7 @@ class PlanarWalker(base.Task):
     """
     self._move_speed = move_speed
     self._forward = 1 if forward else -1
+    self._jump = 1 if jump else -1
     super(PlanarWalker, self).__init__(random=random)
 
   def initialize_episode(self, physics):
@@ -160,7 +172,15 @@ class PlanarWalker(base.Task):
     upright = (1 + physics.torso_upright()) / 2
     stand_reward = (3*standing + upright) / 4
     if self._move_speed == 0:
-      return stand_reward
+        if self._jump:
+            jumping = rewards.tolerance(physics.torso_height(),
+                                         bounds=(_JUMP_HEIGHT, float('inf')),
+                                         margin=_JUMP_HEIGHT/2)
+            upright = (1 + physics.torso_upright()) / 2
+            jump_reward = 0.8*jumping + 0.2*upright
+            return jump_reward
+        else:
+            stand_reward
     else:
       move_reward = rewards.tolerance(self._forward*physics.horizontal_velocity(),
                                       bounds=(self._move_speed, float('inf')),

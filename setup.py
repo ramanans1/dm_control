@@ -33,9 +33,8 @@ PLATFORM_SUFFIXES = {
     'Windows': 'win64',
     'Darwin': 'macos',
 }
-DEFAULT_HEADERS_DIR = '~/.mujoco/mujoco200/include'.format(
+DEFAULT_HEADERS_DIR = '~/.mujoco/mujoco200_{}/include'.format(
     PLATFORM_SUFFIXES[platform.system()])
-
 # Relative paths to the binding generator script and the output directory.
 AUTOWRAP_PATH = 'dm_control/autowrap/autowrap.py'
 MJBINDINGS_DIR = 'dm_control/mujoco/wrapper/mjbindings'
