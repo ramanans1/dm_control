@@ -64,7 +64,18 @@ def stand(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
 def walk(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
   """Returns the Walk task."""
   physics = Physics.from_xml_string(*get_model_and_assets())
-  task = PlanarWalker(move_speed=_WALK_SPEED, random=random)
+  task = PlanarWalker(move_speed=_WALK_SPEED, random=random, forward=True)
+  environment_kwargs = environment_kwargs or {}
+  return control.Environment(
+      physics, task, time_limit=time_limit, control_timestep=_CONTROL_TIMESTEP,
+      **environment_kwargs)
+
+
+@SUITE.add('benchmarking')
+def walk_back(time_limit=_DEFAULT_TIME_LIMIT, random=None, environment_kwargs=None):
+  """Returns the run task."""
+  physics = Physics.from_xml_string(*get_model_and_assets())
+  task = PlanarWalker(move_speed=_WALK_SPEED, random=random, forward=False)
   environment_kwargs = environment_kwargs or {}
   return control.Environment(
       physics, task, time_limit=time_limit, control_timestep=_CONTROL_TIMESTEP,
@@ -105,7 +116,7 @@ class Physics(mujoco.Physics):
 class PlanarWalker(base.Task):
   """A planar walker task."""
 
-  def __init__(self, move_speed, random=None):
+  def __init__(self, move_speed, random=None, forward=True):
     """Initializes an instance of `PlanarWalker`.
 
     Args:
@@ -117,6 +128,7 @@ class PlanarWalker(base.Task):
         automatically (default).
     """
     self._move_speed = move_speed
+    self._forward = 1 if forward else -1
     super(PlanarWalker, self).__init__(random=random)
 
   def initialize_episode(self, physics):
@@ -150,7 +162,7 @@ class PlanarWalker(base.Task):
     if self._move_speed == 0:
       return stand_reward
     else:
-      move_reward = rewards.tolerance(physics.horizontal_velocity(),
+      move_reward = rewards.tolerance(self._forward*physics.horizontal_velocity(),
                                       bounds=(self._move_speed, float('inf')),
                                       margin=self._move_speed/2,
                                       value_at_margin=0.5,
